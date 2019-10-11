@@ -1,3 +1,6 @@
+
+# -*- coding: utf-8 -*-
+
 from sklearn.datasets import make_regression
 import numpy as np
 import pandas as pd
@@ -5,6 +8,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import scipy.stats
+import seaborn as sb
 
 # Visualitzarem només 3 decimals per mostra
 pd.set_option('display.float_format', lambda x: '%.3f' % x)
@@ -24,3 +28,8 @@ y = data[:, 2]
 print("Dimensionalitat de la BBDD:", dataset.shape)
 print("Dimensionalitat de les entrades X", x.shape)
 print("Dimensionalitat de l'atribut Y", y.shape)
+
+print("Per visualitzar les primeres 5 mostres de la BBDD:")
+print(dataset.head())
+print("Per veure estadistiques dels atributs numerics de la BBDD:")
+print(dataset.describe())
