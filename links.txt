@@ -1,0 +1,5 @@
+https://github.com/pgebert/bike-sharing-dataset/blob/master/Bike%20Sharing%20Data%20Science%20Project.ipynb
+
+https://github.com/arsheen/Bike-Sharing-Dataset-Regression-Problem/blob/master/Bike%2BSharing%2BDataset%2BVisualisation.ipynb
+
+https://medium.com/@limavallantin/analysing-bike-sharing-trends-with-python-a9f574c596b9
