@@ -70,7 +70,7 @@ for index in range(dataset['dia'].shape[0]):
 	dataset['dia'][index]=i
 """
 
-"""
+
 #Esborrem atributs que no usarem
 del dataset["dteday"]
 del dataset["instant"]
@@ -95,7 +95,7 @@ del dataset['hum']
 #del dataset['hr']
 #PROVES
 #dataset = dataset.drop(['casual','registered','instant','holiday','windspeed','atemp'],axis=1)
-"""
+
 
 
 
@@ -111,7 +111,7 @@ del dataset['hum']
 
 
 #Esborrem camps inutils
-dataset = dataset.drop(["dteday","instant","casual","registered","atemp",'holiday','windspeed'], axis=1)
+#dataset = dataset.drop(["dteday","instant","casual","registered","atemp",'holiday','windspeed'], axis=1)
 
 #comprovem si hi ha elements nulls
 dataset.info()
@@ -121,7 +121,8 @@ datasetHora['cnt'].describe()
 
 ax = datasetHora[['hr','cnt']].groupby(['hr']).sum().reset_index().plot(kind='bar', figsize=(8, 6),
                                        legend = False, title ="Lloguer total per hores", 
-                                       color='#054466', fontsize=12, width=1.5)
+                                       color='#a80027', fontsize=12, width=1.5)
+ax.set_facecolor('#ffecea')
 ax.set_xlabel("Hora", fontsize=10)
 ax.set_ylabel("Cnt", fontsize=10)
 plt.show()
@@ -131,14 +132,14 @@ print (dataset.keys())
 
 data = dataset.values
 dataNorm = standarize(data)
-x_t = dataNorm[:, :8] 
-y = dataNorm[:, 8] 
+x_t = dataNorm[:, :1]
+y = dataNorm[:, 1]
 
 
 
 
-regr = regression(x_t[:,:8], y) 
-predicted = regr.predict(x_t[:,:8]) 
+regr = regression(x_t[:,:1], y)
+predicted = regr.predict(x_t[:,:1])
 
 MSE = mse(y, predicted)
 r2 = r2_score(y, predicted)
@@ -159,8 +160,9 @@ print("R2 score: ", r2)
 
 
 plt.figure()
-ax = plt.scatter(x_t[:,6], y)
-plt.plot(x_t[:,6], predicted, '#054466')
+#ax.set_facecolor('#ffecea')
+ax = plt.scatter(x_t[:,0], y, c='#ba343a', alpha=0.7, edgecolors = 'none', facecolor='#ffecea')
+plt.plot(x_t[:,0], predicted, '#461220')
 plt.show()
 
 
@@ -196,6 +198,12 @@ for i in range(x_train.shape[1]):
     print("Error en atribut %d: %f" %(i, error))
     print("R2 score en atribut %d: %f\n" %(i, r2))
 
+    print(y_val)
+    print(x_train[:,i])
+    plt.figure()
+    ax = plt.scatter(x_val[:,i], y_val)
+    plt.plot(x_val[:,i], regr.predict(x_v), '#054466')
+    plt.show()
 
 
 
