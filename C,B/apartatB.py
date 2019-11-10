@@ -52,6 +52,10 @@ def standarize(x_train):
     x_t /= std[None, :]
     return x_t
 
+def rand_jitter(arr):
+    stdev = .01*(max(arr)-min(arr))
+    return arr + np.random.randn(len(arr)) * stdev
+
 
 # Carreguem dataset d'exemple
 dataset = pd.read_csv('bike-sharing-dataset/hour.csv', header=0, delimiter=',')
@@ -93,13 +97,18 @@ class RegressorO(object):
         self.reg = reg
         self.x = x
         self.y = y
+        self.it=0
+
+        #atributs per analitzar els paràmetres
+        self.costos=[]
+        self.iterations=[]
 
 
     def predict(self):
         # implementar aqui la funció de prediccio
         loss = np.dot(self.x, self.arrayTheta)
         cost = np.sum(loss ** 2) / (2 * self.x.shape[0])
-        print("Cost: "+str(cost))
+        #print("Cost: "+str(cost))
         return loss
 
     def __update(self, hy):
@@ -114,17 +123,23 @@ class RegressorO(object):
         i=0
         millora=epsilon+1
         costAnt=0
-        while( i < self.maxIt and millora > self.epsilon):
+        print(self.maxIt)
+        while( (i <= self.maxIt) and (millora > self.epsilon)):
+            self.it+=1
             pred = self.predict()
             loss=pred-self.y
             self.cost=(np.sum(loss**2)+reg*np.sum(thetas**2))/(2*self.x.shape[0])
+            self.costos.append(float(self.cost)*100)
+            self.iterations.append(self.it)
             millora = abs(self.cost-costAnt)
             self.__update(pred)
             costAnt=self.cost
+            print("Iter: "+str(self.it)+"  Cost: "+str(self.cost))
+            i+=1
         return self.arrayTheta
 
 def Regressor(x, y, arrayTheta, max_iter, epsilon, aplha, reg):
-    i = 1
+    i = 0
     millora=epsilon+1
     costAnt=0
     while( i < max_iter and millora > epsilon):
@@ -142,14 +157,19 @@ def Regressor(x, y, arrayTheta, max_iter, epsilon, aplha, reg):
 def desnormalitzar(x, mean, std): 
     return x * std + mean
 
+
+#GRAU DE LA FUNCIO
+grau = 1
+
+
 # dades que utilitzarem
 
 data = dataset.values
-dataNorm = data#standarize(data)
-x_t = dataNorm[:, :1]
+dataNorm = standarize(data)
+x_t = dataNorm[:, [0,1]]
 y = dataNorm[:, 2]
 y = y[:, np.newaxis]
-X_b = np.c_[np.ones((len(x_t),1)),x_t]
+X_b = np.c_[np.ones((len(x_t),grau)),x_t]
 ymean=y.mean(0)
 ystd=y.std(0)
 xmean= data[:,0].mean(0)
@@ -164,59 +184,200 @@ X_b = np.c_[np.ones((len(X),1)),X]
 """
 
 
-thetas= np.random.randn(2,2)
-print(thetas)
-alpha = 1
+thetas= np.random.randn(grau+2,1)
+
+alpha = 0.01
 it = 1000
-epsilon= 1.1e-10
-reg=0.01
+epsilon= 1.1e-5
+reg=10
+#alphaTest = [0.0001, 0.00025, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1]
+#itTest = [1, 5, 10, 25, 50, 75, 100, 1000, 2000]
+#epsilonTest = [1.0e-100, 1.0e-75, 1.0e-50, 1.0e-25, 1.0e-10, 1.0e-5, 1.0e-2, 1.0e-1, 1.0]
+regTest=[0.01,0.1,0.5,1,5,10,100]
+costosEstudi = []
+iteracionsPerEstudi = []
 
 
-#arrayTheta, alpha, x, y, maxIt, epsilon, reg
-regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
-print(regr.train())
+#Estudi cost en funcio de Epsilon
+"""
+for reg in regTest:
+    regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
+    thetas = regr.train()
+    print("Costos per max:it "+str(it)+": %s" % (regr.costos))
+    costosEstudi.append(regr.costos[-1])
+    iteracionsPerEstudi.append(regr.it)
 
-#print(regr.train(it,0.1))
+print(costosEstudi)
+print(iteracionsPerEstudi)
 
-thetas = Regressor(X_b,y,thetas,it,epsilon,alpha,reg)
+plt.plot(regTest,costosEstudi, '#461220' )
+plt.title("Cost en funció del regulador")
+plt.xlabel("regulador")
+plt.ylabel("cost (x100)")
+plt.xscale('log')
+plt.show()
+
+plt.plot(regTest,iteracionsPerEstudi, '#461220' )
+plt.title("Iteracions en funció del regulador")
+plt.xlabel("regulador")
+plt.ylabel("iteracions")
+plt.xscale('log')
+plt.show()
+
+"""
+
+#Estudi cost en funcio de Epsilon
+"""
+for epsilon in epsilonTest:
+    regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
+    thetas = regr.train()
+    print("Costos per max:it "+str(it)+": %s" % (regr.costos))
+    costosEstudi.append(regr.costos[-1])
+    iteracionsPerEstudi.append(regr.it)
+
+print(costosEstudi)
+print(iteracionsPerEstudi)
+
+plt.plot(epsilonTest,costosEstudi, '#461220' )
+plt.title("Cost en funció de epsilon")
+plt.xlabel("epsilon")
+plt.ylabel("cost (x100)")
+plt.xscale('log')
+plt.show()
+
+plt.plot(epsilonTest,iteracionsPerEstudi, '#461220' )
+plt.title("Iteracions en funció de epsilon")
+plt.xlabel("epsilon")
+plt.ylabel("iteracions")
+plt.xscale('log')
+plt.show()
+"""
+
+#Estudi cost en funció de les iteracions
+"""
+for it in itTest:
+    regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
+    thetas = regr.train()
+    print("Costos per max:it "+str(it)+": %s" % (regr.costos))
+    costosEstudi.append(regr.costos[-1])
+    iteracionsPerEstudi.append(regr.it)
+
+print(costosEstudi)
+print(iteracionsPerEstudi)
+
+
+plt.plot(itTest,costosEstudi, '#461220' )
+plt.title("Cost en funció de max_it")
+plt.xlabel("max_it")
+plt.ylabel("cost (x100)")
+#plt.xscale('log')
+plt.show()
+
+plt.plot(itTest,iteracionsPerEstudi, '#461220' )
+plt.title("Iteracions en funció de max_it")
+plt.xlabel("max_it")
+plt.ylabel("iteracions")
+#plt.xscale('log')
+plt.show()
+"""
+
+#Estudi cost en funció de alpha
+"""
+for alpha in alphaTest:
+    regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
+    thetas = regr.train()
+    #print("Costos per alpha "+str(alpha)+": %s" % (regr.costos))
+    costosEstudi.append(regr.costos[-1])
+    iteracionsPerEstudi.append(regr.it)
+    
+
+
+plt.plot(alphaTest,costosEstudi, '#461220' )
+plt.title("Cost en funció de alpha")
+plt.xlabel("alpha")
+plt.ylabel("cost (x100)")
+plt.show()
+
+plt.plot(alphaTest,iteracionsPerAlpha, '#461220' )
+plt.title("Iteracions en funció de alpha")
+plt.xlabel("alpha")
+plt.ylabel("iteracions")
+plt.show()
+"""
+
+
+
+
+"""
+#thetas = Regressor(X_b,y,thetas,it,epsilon,alpha,reg)
+thetas = regr.train()
 print(thetas)
 #y=desnormalitzar(y, ymean, ystd)
 
 #thetas = desnormalitzar(thetas, xmean, xstd)
 print(thetas)
 #x_t= desnormalitzar(x_t, xmean, xstd)
-#cost 3gra 1136010.1278228892
-#cost rect 1136010.1278228872
+"""
 
+#RESULTAT REGRESSIO
+
+"""
 plt.figure()
-#ax.set_facecolor('#ffecea')
-ax = plt.scatter(x_t, y, c='#ba343a', alpha=0.7, edgecolors = 'none', facecolor='#ffecea')
+ax = plt.scatter(rand_jitter(x_t), y, c='#ba343a', alpha=0.7, edgecolors = 'none', facecolor='#ffecea')
+x_rect = np.linspace(-2,2,100)
 
-x_rect = np.linspace(0,1,100)
-y_rect = thetas[1][1]*x_rect+thetas[1][0]
-#y_rect = thetas[3]*x_rect**3 + thetas[2]*x_rect**2+ thetas[1]*x_rect + thetas[0]
+
+                    #GRAU 1
+if grau == 1:
+    y_rect = thetas[1]*x_rect+thetas[0]
+elif grau == 2:      #GRAU 2
+    y_rect = thetas[2]*x_rect**2+ thetas[1]*x_rect + thetas[0]
+elif grau == 3:      #GRAU 3
+    y_rect = thetas[3]*x_rect**3 + thetas[2]*x_rect**2+ thetas[1]*x_rect + thetas[0]
+elif grau == 4:      #GRAU 4
+    y_rect = thetas[4]*x_rect**4 +thetas[3]*x_rect**3 + thetas[2]*x_rect**2+ thetas[1]*x_rect + thetas[0]
+elif grau == 5:
+    y_rect = thetas[5]*x_rect**5 +thetas[4]*x_rect**4 +thetas[3]*x_rect**3 + thetas[2]*x_rect**2+ thetas[1]*x_rect + thetas[0]
+else:
+    y_rect = thetas
+
 plt.plot(x_rect, y_rect, '#461220')
 #ValueError: x and y must have same first dimension, but have shapes (100, 1) and (2, 1)
-plt.title("Cnt en funció la temp (Descens del Gradient)")
+plt.title("Cnt en funció la hora (Descens del Gradient)")
 plt.xlabel("temp")
 plt.ylabel("cnt")
 plt.show()
+"""
+
+#Mostrar evolució del cost
+"""
+plt.plot(regr.iterations, regr.costos, '#461220' )
+plt.show()
+"""
+
+#2D
 
 
 
 from mpl_toolkits.mplot3d import axes3d, Axes3D # generem dades 3D d'exemple
-x_val = np.random.random((100, 2))
-y_val = np.random.random((100, 1))
+#x_val = np.random.random((100, 2))
+#y_val = np.random.random((100, 1))
 #regr = regression(x_val, y_val)
-
+regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
+regr.train()
 predX3D = regr.predict()
+x_t[0]= rand_jitter(x_t[0])
+x_t[1]= rand_jitter(x_t[1])
+#X_b = np.random.random((100, 2))
+#y = np.random.random((100, 1))
+#predX3D = np.random.random((100, 1))
 # Afegim els 1's
-A = np.hstack((x_val,np.ones([x_val.shape[0],1])))
+A = np.hstack((x_t,np.ones([x_t.shape[0],1])))
 w = np.linalg.lstsq(A,predX3D)[0]
 #1r creem una malla acoplada a la zona de punts per tal de representar el pla
-malla = (range(20) + 0 * np.ones(20)) / 10
-malla_x1 =  malla * (max(x_val[:,0]) - min(x_val[:,0]))/2 + min(x_val[:,0])
-malla_x2 =  malla * (max(x_val[:,1]) - min(x_val[:,1]))/2 + min(x_val[:,1])
+malla = (range(22) + 0 * np.ones(22)) / 10
+malla_x1 =  malla * (max(x_t[:,0]) - min(x_t[:,0]))/2 + min(x_t[:,0])
+malla_x2 =  malla * (max(x_t[:,1]) - min(x_t[:,1]))/2 + min(x_t[:,1])
 #la fucnio meshgrid ens aparella un de malla_x1 amb un de malla_x2, per atot #element de mallax_1 i per a tot element de malla_x2.
 xplot, yplot = np.meshgrid(malla_x1 ,malla_x2)
 # Cal desnormalitzar les dades
@@ -224,9 +385,13 @@ def desnormalitzar(x, mean, std): return x * std + mean
 #ara creem la superficies que es un pla
 zplot = w[0] * xplot + w[1] * yplot + w[2]
 #Dibuixem punts i superficie
-plt3d = plt.figure('Coeficiente prismatico -- Relacio longitud desplacament 3D', dpi=100.0).gca(projection='3d')
-plt3d.plot_surface(xplot,yplot,zplot, color='red')
-plt3d.scatter(x_val[:,0],x_val[:,1],y_val)
+plt3d = plt.figure('Cnt en funció de tmp i hr', dpi=100.0).gca(projection='3d')
+plt3d.plot_surface(xplot,yplot,zplot, color='#461220')
+plt3d.scatter(x_t[:,0],x_t[:,1],y, c='#ba343a')
+plt.xlabel("hr")
+plt.ylabel("tmp")
+#plt.zlabel("cnt")
+plt.show()
 
 
 
