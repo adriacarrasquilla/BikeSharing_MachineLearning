@@ -187,25 +187,28 @@ X_b = np.c_[np.ones((len(X),1)),X]
 thetas= np.random.randn(grau+2,1)
 
 alpha = 0.01
-it = 1000
-epsilon= 1.1e-5
+it = 1000000
+epsilon= 1.1e-10
 reg=10
-#alphaTest = [0.0001, 0.00025, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1]
-#itTest = [1, 5, 10, 25, 50, 75, 100, 1000, 2000]
-#epsilonTest = [1.0e-100, 1.0e-75, 1.0e-50, 1.0e-25, 1.0e-10, 1.0e-5, 1.0e-2, 1.0e-1, 1.0]
+alphaTest = [0.0001, 0.00025, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 5]
+itTest = [1, 5, 10, 25, 50, 75, 100, 1000, 2000]
+epsilonTest = [1.0e-100, 1.0e-75, 1.0e-50, 1.0e-25, 1.0e-10, 1.0e-5, 1.0e-2, 1.0e-1, 1.0]
 regTest=[0.01,0.1,0.5,1,5,10,100]
 costosEstudi = []
 iteracionsPerEstudi = []
 
 
-#Estudi cost en funcio de Epsilon
-"""
+#Estudi cost en funcio de reg
+
+thetasAux=thetas[:]
+
 for reg in regTest:
     regr = RegressorO(thetas,alpha,X_b,y, it, epsilon, reg)
     thetas = regr.train()
     print("Costos per max:it "+str(it)+": %s" % (regr.costos))
     costosEstudi.append(regr.costos[-1])
     iteracionsPerEstudi.append(regr.it)
+    thetas=thetasAux[:]
 
 print(costosEstudi)
 print(iteracionsPerEstudi)
@@ -224,7 +227,7 @@ plt.ylabel("iteracions")
 plt.xscale('log')
 plt.show()
 
-"""
+
 
 #Estudi cost en funcio de Epsilon
 """
@@ -234,6 +237,7 @@ for epsilon in epsilonTest:
     print("Costos per max:it "+str(it)+": %s" % (regr.costos))
     costosEstudi.append(regr.costos[-1])
     iteracionsPerEstudi.append(regr.it)
+    thetas=thetasAux[:]
 
 print(costosEstudi)
 print(iteracionsPerEstudi)
@@ -261,6 +265,7 @@ for it in itTest:
     print("Costos per max:it "+str(it)+": %s" % (regr.costos))
     costosEstudi.append(regr.costos[-1])
     iteracionsPerEstudi.append(regr.it)
+    thetas=thetasAux[:]
 
 print(costosEstudi)
 print(iteracionsPerEstudi)
@@ -289,6 +294,7 @@ for alpha in alphaTest:
     #print("Costos per alpha "+str(alpha)+": %s" % (regr.costos))
     costosEstudi.append(regr.costos[-1])
     iteracionsPerEstudi.append(regr.it)
+    thetas=thetasAux[:]
     
 
 
@@ -298,7 +304,7 @@ plt.xlabel("alpha")
 plt.ylabel("cost (x100)")
 plt.show()
 
-plt.plot(alphaTest,iteracionsPerAlpha, '#461220' )
+plt.plot(alphaTest,iteracionsPerEstudi, '#461220' )
 plt.title("Iteracions en funció de alpha")
 plt.xlabel("alpha")
 plt.ylabel("iteracions")
